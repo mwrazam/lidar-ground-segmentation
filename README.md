@@ -1,0 +1,1 @@
+# LiDAR Point Cloud Ground Segmentation using Image-Analogous Gradients
