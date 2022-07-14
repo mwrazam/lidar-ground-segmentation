@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ```
 
 # Getting the data
-Two datasets are used in this project. The Vancouver 2018 LiDAR dataset and the Sensaturban point cloud dataset. They can be obtained by visiting their respective websites.
+Two datasets are used in this project. The [Vancouver 2018 LiDAR dataset](https://opendata.vancouver.ca/explore/dataset/lidar-2018/information/) and the [Sensaturban point cloud dataset](https://github.com/QingyongHu/SensatUrban). They can be obtained by visiting their respective websites.
 
 We generated the visualizations above on a crop of the 4910E_54590N.las tile from Vancouver, and the full cambridge_block_8.ply tile from Sensaturban.
 
@@ -37,6 +37,8 @@ python main.py --file=LAS/PLY_FILENAME
 
 The program will assume by default that the file is contained in the `/data` folder. The `--file` argument is required, but there are also some other options available (with defaults shown):
 
-`--datadir=data` set location of the data, intermediate outputs will be saved to this same folder
+`--datadir=data` sets location of the data, intermediate outputs will be saved to this same folder
+
 `--debug=False` provides feedback as to which step the program is currently performing
-`--intermediate_output=True` produces intermediate .npy files along the way, reducing computation time with reruns 
+
+`--intermediate_output=True` produces intermediate `.npy` files along the way, reducing computation time with reruns
