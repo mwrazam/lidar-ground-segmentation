@@ -33,7 +33,8 @@ def load_data(filepath:os.path, intermediate_output:bool=False,
     else:
         if ft == "ply":
             # Load point cloud format file
-            data, colors, labels = get_ply_data(filepath, subsample=50, debug=debug)
+            # TODO: Expose subsample parameter to command line args, default to None
+            data, colors, labels = get_ply_data(filepath, subsample=25, debug=debug)
             if debug: print(f"Loaded PLY file with {data.shape}")
             if intermediate_output:
                 np.save(imd_data, data)
@@ -46,6 +47,7 @@ def load_data(filepath:os.path, intermediate_output:bool=False,
                     if debug: (f"Saved labels to {imd_labels}")
         elif ft == "las":
             # Load LAS data
+            # TODO: Expose trim and z_quant parameters to command line args
             data = get_las_data(filepath, trim=[0.15, 0.40, 0.4, 0.65], z_quant=[0.01, 0.99], debug=debug)
             #data = get_las_data(filepath, debug=debug)
             if debug: print(f"Loaded LAS file with {data.shape}")

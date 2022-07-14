@@ -4,6 +4,7 @@ from scipy.spatial import KDTree
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import confusion_matrix
 
+# Generate per point analogous gradients
 def compute_point_based_gradient(filepath:os.path, data:np.ndarray, k:int=50, 
         debug:bool=False, intermediate_output=False) -> tuple[np.ndarray, np.ndarray]:
     # Compute the gradient magnitude and direction based on the first and third principal components
@@ -55,8 +56,9 @@ def compute_point_based_gradient(filepath:os.path, data:np.ndarray, k:int=50,
 
     return g_mag, g_dir
 
+# Perform ground classification
 def classify_ground(filepath:os.path, data:np.ndarray, grad:np.ndarray, 
-        lower_bound:np.double =-0.9, upper_bound:np.double=0.9,
+        lower_bound:np.double =-0.9, upper_bound:np.double=0.9, eps=0.5,
         debug:bool=False, intermediate_output=False) -> np.ndarray:
 
     # classification storage
@@ -80,7 +82,11 @@ def classify_ground(filepath:os.path, data:np.ndarray, grad:np.ndarray,
         X = data[m[:,0]==1]
 
         # Cluster points and pick out the largest as the ground
-        Y = DBSCAN(eps=0.5).fit_predict(X)
+        if ft == 'las':
+            eps = 0.01
+            # TODO: Finish off the part that automates determining epsilon
+            #  based on x-y point density
+        Y = DBSCAN(eps=eps).fit_predict(X)
         labels, counts = np.unique(Y[Y>=0], return_counts=True)
         print(labels, counts)
         largest = labels[np.argsort(-counts)[:1]]
@@ -95,11 +101,43 @@ def classify_ground(filepath:os.path, data:np.ndarray, grad:np.ndarray,
 
     return m[:,1].reshape((m.shape[0], 1))
 
-# Compare predicated labels and compute metrics
-def calculate_scores(predicted, truth):
-    scores = {"accuracy": None, "precision": None, "recall": None, "f1": None, "iou": None}
-    cm = confusion_matrix(truth, predicted)
-    print(cm)
-    # TODO: Calculate acc and other measures
+# Set all non-ground labels to 0, ground labels to 1
+def binarize_labels(labels:np.ndarray) -> np.ndarray:
+    truth = np.zeros((labels.shape[0]), dtype=int)
+    
+    # These are the points we are taking as 'ground' in the sensaturban dataset
+    truth[labels==0] = 1  # 'Ground'
+    truth[labels==5] = 1 # 'Parking'
+    truth[labels==6] = 1 # 'Rail'
+    truth[labels==7] = 1 # 'traffic Roads'
+    truth[labels==10] = 1 # 'Footpath'
+    truth[labels==12] = 1 # 'Water'
 
-    pass
+    # Labels not included as ground are:
+    # 1: 'High Vegetation'
+    # 2: 'Buildings'
+    # 3: 'Walls'
+    # 4: 'Bridge'
+    # 8: 'Street Furniture'
+    # 9: 'Cars'
+    # 11: 'Bikes'
+
+    return truth
+
+# Compare predicated labels and compute metrics
+def calculate_scores(predicted:np.ndarray, truth:np.ndarray) -> dict:
+    cm = confusion_matrix(truth, predicted)
+    tp = cm[0,0]
+    tn = cm[1,1]
+    fp = cm[0,1]
+    fn = cm[1,0]
+    scores = {
+        "accuracy": (tp + tn)/(tp + tn + fp + fn), 
+        "misclassed": (fp + fn)/(tp + tn + fp + fn), 
+        "precision": tp/(tp + fp), 
+        "recall": tp/(tp + fn), 
+        "specificity": tn/(tn + fp), 
+        "f1": 2*tp/(2*tp + fp + fn), 
+        "iou": tp/(tp + fp + fn)}
+
+    return scores

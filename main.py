@@ -1,15 +1,20 @@
 import os, sys
 
 from utils import generate_point_cloud, load_data
-from segmentation import compute_point_based_gradient, classify_ground
+from segmentation import compute_point_based_gradient, classify_ground, calculate_scores, binarize_labels
 
 def main(filename, data_directory="data", debug=False, intermediate_output=False):
     # Perform data load
     fp = os.path.join(os.getcwd(), data_directory, filename)
     data, colors, labels = load_data(fp, intermediate_output=intermediate_output, debug=debug)
     g_mag, g_dir = compute_point_based_gradient(fp, data, intermediate_output=intermediate_output, debug=debug)
-    cls = classify_ground(fp, data, g_mag, intermediate_output=intermediate_output, debug=debug)
-    print(cls)
+    predicted = classify_ground(fp, data, g_mag, intermediate_output=intermediate_output, debug=debug)
+    
+    # We can only output predicted/truth perforance metrics when we have labels
+    if labels is not None:
+        truth = binarize_labels(labels)
+        performance = calculate_scores(predicted, truth)
+        print(performance)
 
 if __name__ == "__main__":
     args = {"--file": None, "--debug": False, "--intermediate_output": False, "--datadir": "data"}
